@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css"
+    />
+    <style>
+      body {
+        height: 100%;
+      }
+      .wrap {
+        display: flex;
+        flex-direction: column;
+        width: 40%;
+        height: 100%;
+        border-style: solid;
+        border-color: gray;
+        border-radius: 10px;
+        padding: 10px;
+      }
+      #title-box,
+      #img-box,
+      #comment-box {
+        border: 2px solid gray;
+        border-radius: 10px;
+      }
+
+      #title-box {
+        height: 50px;
+      }
+      #img-box {
+        height: 300px;
+        margin: 10px 0px;
+      }
+      #comment-box {
+        height: 300px;
+      }
+      img {
+        height: 100%;
+        width: 100%;
+        border-radius: 10px;
+      }
+
+      h3,
+      span {
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/home">&larr; Home</a>
+    <main class="wrap">
+      <div id="title-box"><h3>{{doc.title}}</h3></div>
+      <div id="img-box">
+        <img
+          src="{{ url_for('static', filename='images/' + doc.image) }}"
+          alt="Image"
+        />
+      </div>
+      <div id="comment-box"><span>{{doc.content}}</span></div>
+    </main>
+  </body>
+</html>

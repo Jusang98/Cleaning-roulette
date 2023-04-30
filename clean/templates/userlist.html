@@ -1,0 +1,85 @@
+<!-- 유저 리스트 페이지 조회 페이지 -->
+
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <title>User List Page</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css"
+    />
+  </head>
+
+  <style>
+    .wrapper {
+      width: 800px;
+      margin: auto;
+    }
+  </style>
+
+  <script>
+    const { email, name, photo } = JSON.parse(
+      localStorage.getItem("user-info")
+    );
+
+    console.log(email, name, photo);
+    currentUser = [name, email, photo];
+
+    $(document).ready(function () {
+      $(".admin").hide();
+      if (currentUser[0] === "admin" && currentUser[1] === "admin") {
+        $(".admin").show();
+      }
+    });
+
+    // 유저 삭제 API
+    function deleteUser(name) {
+      $.ajax({
+        type: "POST",
+        url: "/api/deleteUser",
+        data: { name_give: name },
+        success: function (response) {
+          if (response["result"] == "success") {
+            alert("삭제 완료!");
+            location.reload();
+          }
+        },
+      });
+    }
+  </script>
+  <body>
+    <!-- 뒤로가기버튼 - 홈페이지와 연결 필요 -->
+    <a href="/home" role="button" class="outline">뒤로가기</a>
+
+    <div class="wrapper">
+      <h1>User List</h1>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col" , class="admin">😠</th>
+          </tr>
+        </thead>
+        {% for user in users %}
+        <tbody>
+          <tr>
+            <!-- ID 행 추가 -->
+            <!-- <th scope="row">{{ user['_id'] }}</th> -->
+            <th scope="row">#</th>
+            <td>{{ user['name'] }}</td>
+            <td>{{ user['email'] }}</td>
+            {% if user['name'] != 'admin' %}
+            <td onclick="deleteUser(`{{ user['name'] }}`)" class="admin">❌</td>
+            {% endif %}
+          </tr>
+        </tbody>
+        {% endfor%}
+      </table>
+    </div>
+  </body>
+</html>

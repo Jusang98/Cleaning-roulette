@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css"
+    />
+    <title>Upload File</title>
+  </head>
+
+  <style>
+    h2,
+    h3 {
+      margin: 0 auto;
+    }
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 700px;
+      height: 800px;
+      padding: 10px 30px;
+      margin: 20px auto;
+      border-style: solid;
+      border-color: gray;
+      border-radius: 10px;
+    }
+
+    .outline {
+      height: 40px;
+      width: 70px;
+    }
+    .buttons {
+      width: 200px;
+      height: 30px;
+    }
+
+    #title {
+      flex: 1;
+      height: 35px;
+      width: 100%;
+      margin: 5px;
+    }
+
+    #content {
+      flex: 1;
+      margin: 5px;
+      height: 400px;
+      width: 100%;
+      resize: none;
+    }
+
+    .filebox .upload-name {
+      margin: 10px;
+      display: inline-block;
+      height: 40px;
+      padding: 0 10px;
+      vertical-align: middle;
+      border: 1px solid #dddddd;
+      width: 70%;
+      color: #999999;
+    }
+
+    .filebox label {
+      display: inline-block;
+      color: #fff;
+      background-color: #999999;
+      cursor: pointer;
+      margin: 10px;
+      height: 40px;
+      width: 100px;
+      margin-left: 10px;
+      border-radius: 10px;
+      text-align: center;
+    }
+  </style>
+
+  <body>
+    <a href="/home"> &larr; 홈으로</a>
+    <div class="wrap">
+      <form
+        method="POST"
+        enctype="multipart/form-data"
+        action="http://43.201.107.148:5001/api/uploadFile"
+      >
+        <h2>제목</h2>
+        <input type="text" name="title" id="title" />
+        <h2>내용</h2>
+        <textarea type="text" name="content" id="content"> </textarea>
+        <h3>인증샷</h3>
+        <input type="file" name="file" id="file" accept="image/*" required />
+        <input type="submit" value="제출" />
+      </form>
+    </div>
+    <script>
+      $("#file").on("change", function () {
+        var fileName = $("#file").val();
+        $(".upload-name").val(fileName);
+      });
+    </script>
+  </body>
+</html>

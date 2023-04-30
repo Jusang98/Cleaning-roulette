@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+      integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap"
+      rel="stylesheet"
+    />
+    <title></title>
+    <script>
+      let loggedUser;
+      var rollingId;
+
+      $(document).ready(function () {
+        getCookie();
+      });
+
+      function rollingStart() {
+        var $banner = $(".banner").find("ul");
+        var $bannerWidth = $banner.children().outerWidth(); //배너 이미지의 폭
+        var $bannerHeight = $banner.children().outerHeight(); // 높이
+        var $bannerLength = $banner.children().length; //배너 이미지의 갯수
+
+        $banner.css("width", $bannerWidth * $bannerLength + "px");
+        $banner.css("height", $bannerHeight + "px");
+        //alert(bannerHeight);
+        //배너의 좌측 위치를 옮겨 준다.
+        $banner.animate({ left: -$bannerWidth + "px" }, 10, function () {
+          //숫자는 롤링 진행되는 시간이다.
+          //첫번째 이미지를 마지막 끝에 복사(이동이 아니라 복사)해서 추가한다.
+          $(this).append("<li>" + $(this).find("li:first").html() + "</li>");
+          //뒤로 복사된 첫번재 이미지는 필요 없으니 삭제한다.
+          $(this).find("li:first").remove();
+          //다음 움직임을 위해서 배너 좌측의 위치값을 초기화 한다.
+          $(this).css("left", 0);
+          //이 과정을 반복하면서 계속 롤링하는 배너를 만들 수 있다.
+        });
+      }
+
+      //당첨자 선정 뽑기시에 실행된다.
+      function winnerSelect() {
+        var winner = $("li:first").find("h2");
+        alert(winner.text() + "님 당첨 축하드립니다~");
+        winnerData = winner.text();
+        if (winner.text() != null) {
+          winnerList(`${winner.text()}`);
+          //winnerCongrats(winner.text()); 함수 코드 메모장에 있어
+          //이 if문에서 파이썬 디비에 당첨자리스트에 담아주는 작업을 하자
+        }
+      }
+      //추첨 시작 버튼 변환 기능
+      function startStop() {
+        const btn = document.querySelector("#rolling-box"); //id가 'btn'인 요소를 반환한다.
+        if (btn.innerText == "돌리기") {
+          //버튼의 텍스트값 확인
+          rollingReStart();
+          btn.innerText = "뽑기"; // 텍스트를 unfollow로 변경
+        } else {
+          // 반대일 경우 다시 변경
+          rollingStop();
+          btn.innerText = "돌리기";
+        }
+      }
+      //추첨 재시작
+      function rollingReStart() {
+        rollingId = setInterval(function () {
+          getUserPhoto();
+          rollingStart();
+        }, 150);
+      }
+      //뽑기 == 롤링 멈추기
+      function rollingStop() {
+        winnerSelect();
+        clearInterval(rollingId);
+      }
+
+      // 유저 사진 링크,이름 가져오기
+      function getUserPhoto() {
+        $.ajax({
+          type: "GET",
+          url: "/userList",
+          data: {},
+          success: function (response) {
+            let users = response["user"];
+            console.log(users);
+            for (let i = 0; i < users.length; i++) {
+              if (users[i]["name"] != "admin") {
+                makePhoto(users[i]["photo"], users[i]["name"]);
+              }
+            }
+          },
+        });
+      }
+      //당첨된 인원 받아온 유저 리스트에서 삭제하면서(db는 유지) 당첨자 리스트에 추가하는 기능
+      function winnerList(winner) {
+        $.ajax({
+          type: "POST",
+          url: "/winnerList",
+          data: { winner_give: winner },
+          success: function (response) {},
+        });
+      }
+      //winnerList DB 전체 삭제
+      function deleteAll() {
+        $.ajax({
+          type: "POST",
+          url: "/winner/deleteAll",
+          data: {},
+          success: function (response) {
+            if (response["result"] == "success") {
+              alert("당첨자 전체 삭제");
+              window.location.reload();
+            } else {
+              alert("서버 오류!");
+            }
+          },
+        });
+      }
+      //당첨된 사람 photoLink 삭제하기 구현해야함
+      function makePhoto(photoLink, name) {
+        let tempHtml = `
+  <li class='${name}' style="list-style: none;">
+      <img
+        src=${photoLink}
+        width="200px"
+        height="150px"
+        />
+        <h2>${name}</h2>
+      </li>
+  `;
+        $("#banner").append(tempHtml);
+      }
+      //당첨된 사람 축하메시지 유지? 유지하지마?
+      //사용자 쿠키 가져오기
+      function getCookie() {
+        let cookie = $.cookie("mytoken");
+        $.ajax({
+          type: "POST",
+          url: "/cookie/get",
+          data: { mytoken: cookie },
+          success: function (response) {
+            loggedUser = response["loggedUser"];
+            console.log(loggedUser);
+            showToAdmin(loggedUser);
+            userName = loggedUser["name"];
+            loggedUserName(userName);
+            if (userName == "admin") {
+              getUserPhoto();
+            }
+            localStorage.setItem("user-info", JSON.stringify(loggedUser));
+          },
+        });
+      }
+
+      function deletePost(id) {
+        $.ajax({
+          type: "POST",
+          url: "/api/deleteFeed",
+          data: { id_give: id },
+          success: function (response) {
+            if (response["result"] == "success") {
+              alert("삭제 완료!");
+              location.reload();
+            }
+          },
+        });
+      }
+
+      function showToAdmin(loggedUser) {
+        $(".admin").hide();
+        if (loggedUser["name"] == "admin" && loggedUser["email"] == "admin") {
+          $(".admin").show();
+        }
+      }
+
+      //사용자 정보 표시
+      function loggedUserName(userName) {
+        let tempHtml = `
+        <a role="button" class="outline"
+        >${userName}</a>
+      `;
+        $("#upperStyle").prepend(tempHtml);
+      }
+
+      //로그아웃
+      function logout() {
+        $.removeCookie("mytoken", { path: "/" });
+        window.location.href = "/";
+      }
+    </script>
+  </head>
+
+  <style>
+    * {
+      margin: auto;
+      font-family: "Nanum Gothic", sans-serif;
+    }
+
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 10px;
+      font-family: "Nanum Gothic", sans-serif;
+    }
+
+    h1 {
+      background-color: hsl(195deg, 85%, 41%);
+      border-width: 0;
+      border-style: solid;
+      border-radius: 5px;
+      border-color: black;
+      text-align: center;
+      color: white;
+    }
+
+    .wrapper {
+      width: 800px;
+      margin: 0 auto;
+    }
+
+    th {
+      text-align: center;
+    }
+
+    .contents {
+      width: 600px;
+      height: 400px;
+      margin: 0 auto;
+    }
+
+    .banner {
+      position: relative;
+      top: 40px;
+      left: 150px;
+      object-fit: cover;
+      width: 500px;
+      height: 400px;
+      margin: 0 auto;
+      padding: 0;
+      overflow: hidden;
+    }
+    .banner ul {
+      position: absolute;
+      object-fit: cover;
+      margin: 0px;
+      width: 600px;
+      padding: 0;
+      list-style: none;
+    }
+    .banner ul li {
+      float: left;
+      object-fit: cover;
+      width: 500px;
+      height: 400px;
+      bottom: 100px;
+      margin: 0;
+      padding: 0;
+    }
+    ul#winnercard {
+      padding: 0;
+      text-align: center;
+    }
+    li#winnercard {
+      display: inline-block;
+    }
+  </style>
+
+  <body>
+    <div id="upperStyle">
+      <a href="/" id="logout" role="button" class="outline" onclick="logout()"
+        >로그아웃</a
+      >
+    </div>
+    <div class="wrapper">
+      <h1 display="inline">이번 주 청소당번은?</h1>
+      <main class="container">
+        <div class="contents admin">
+          <div class="banner">
+            <ul id="banner"></ul>
+          </div>
+        </div>
+
+        <ul id="winnercard">
+          {% for winner in winners %}
+          <li style="list-style: none">
+            <img src="{{winner.photo}}" width="100px" height="100px" />
+            <span>{{winner.name}}님! 청소를 부탁해요 😂</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <button type="submit" onclick="location.href='/uploadPage'">
+          인증글 쓰러 가기
+        </button>
+        <div class="container">
+          <!-- <img src="{{ url_for('static', filename='pig.PNG') }}" alt=""/> -->
+          <div class="grid">
+            <button
+              class="admin"
+              type="submit"
+              id="rolling-box"
+              onclick="startStop()"
+            >
+              돌리기
+            </button>
+
+            <button class="admin" type="submit" onclick="deleteAll()">
+              다시뽑기
+            </button>
+
+            <button
+              type="submit"
+              id="rolling-box"
+              onclick="location.href='/userlist'"
+            >
+              유저리스트
+            </button>
+          </div>
+        </div>
+      </main>
+      <p></p>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" width="1000px">이번주 청소 인증!</th>
+            <th scope="col" class="admin">🤔</th>
+          </tr>
+        </thead>
+        {% for data in datas %}
+        <tbody>
+          <tr>
+            <td><a href="/detail/{{data._id}}">{{data.title}}</a></td>
+            {% if ((data['email'] == 'admin') and (data['name'] == 'admin')) %}
+            <td></td>
+            {% else %}
+            <td onclick="deletePost(`{{ data['_id'] }}`)" class="admin">❌</td>
+            {% endif %}
+            <td></td>
+          </tr>
+        </tbody>
+        {% endfor%}
+      </table>
+    </div>
+  </body>
+</html>

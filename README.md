@@ -1,4 +1,4 @@
-# Cleaning-roulette
+# 청소 당번 룰렛
 언어 - Python
 
 서버- Flask
